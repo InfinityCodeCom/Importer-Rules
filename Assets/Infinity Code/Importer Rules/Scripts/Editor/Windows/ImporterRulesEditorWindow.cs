@@ -33,7 +33,7 @@ public class ImporterRulesEditorWindow:EditorWindow
 
         if (GUILayout.Button("Save"))
         {
-            if (tempRule.pathComparer == ImporterRulesPathComparer.regEx && !string.IsNullOrEmpty(tempRule.pattern))
+            if (tempRule.pathComparer == ImporterRulesPathComparer.regex && !string.IsNullOrEmpty(tempRule.pattern))
             {
                 try
                 {

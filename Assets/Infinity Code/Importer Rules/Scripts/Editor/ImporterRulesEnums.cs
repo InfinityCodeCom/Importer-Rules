@@ -14,6 +14,6 @@
         allAssets,
         startWith,
         contains,
-        regEx
+        regex
     }
 }

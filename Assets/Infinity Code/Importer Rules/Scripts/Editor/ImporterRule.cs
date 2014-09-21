@@ -89,8 +89,8 @@ namespace InfinityCode.ImporterRules
         public bool CheckPath(string assetPath)
         {
             if (pathComparer == ImporterRulesPathComparer.allAssets) return true;
-            if (pathComparer != ImporterRulesPathComparer.regEx &&  string.IsNullOrEmpty(path)) return true;
-            if (pathComparer == ImporterRulesPathComparer.regEx && string.IsNullOrEmpty(pattern)) return true;
+            if (pathComparer != ImporterRulesPathComparer.regex &&  string.IsNullOrEmpty(path)) return true;
+            if (pathComparer == ImporterRulesPathComparer.regex && string.IsNullOrEmpty(pattern)) return true;
             if (path.Length > assetPath.Length) return false;
             assetPath = assetPath.Substring(7).ToLower();
 
@@ -104,7 +104,7 @@ namespace InfinityCode.ImporterRules
             {
                 if (assetPath.Contains(curPath)) return true;
             }
-            else if (pathComparer == ImporterRulesPathComparer.regEx)
+            else if (pathComparer == ImporterRulesPathComparer.regex)
             {
                 Regex regex = new Regex(pattern);
                 if (regex.IsMatch(assetPath)) return true;
@@ -160,7 +160,7 @@ namespace InfinityCode.ImporterRules
                 }
                 GUILayout.EndHorizontal();
             }
-            else if (pathComparer == ImporterRulesPathComparer.regEx) pattern = EditorGUILayout.TextField("Pattern: ", pattern);
+            else if (pathComparer == ImporterRulesPathComparer.regex) pattern = EditorGUILayout.TextField("Pattern: ", pattern);
 
             EditorGUILayout.Space();
 
@@ -267,8 +267,8 @@ namespace InfinityCode.ImporterRules
             if (pathComparer != ImporterRulesPathComparer.allAssets)
             {
                 element.CreateChild("PathComparer", pathComparer.ToString());
-                if (pathComparer != ImporterRulesPathComparer.regEx && !string.IsNullOrEmpty(path)) element.CreateChild("Path", path);
-                if (pathComparer == ImporterRulesPathComparer.regEx && !string.IsNullOrEmpty(pattern)) element.CreateChild("Pattern", pattern);
+                if (pathComparer != ImporterRulesPathComparer.regex && !string.IsNullOrEmpty(path)) element.CreateChild("Path", path);
+                if (pathComparer == ImporterRulesPathComparer.regex && !string.IsNullOrEmpty(pattern)) element.CreateChild("Pattern", pattern);
             }
             XmlElement propsElement = element.CreateChild("Props");
 
