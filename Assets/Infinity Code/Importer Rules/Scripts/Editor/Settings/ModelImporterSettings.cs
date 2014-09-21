@@ -1,4 +1,7 @@
-﻿using UnityEditor;
+﻿/*     INFINITY CODE 2013-2014      */
+/*   http://www.infinity-code.com   */
+
+using UnityEditor;
 
 namespace InfinityCode.ImporterRules
 {

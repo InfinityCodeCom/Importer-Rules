@@ -1,4 +1,7 @@
-﻿using System.Xml;
+﻿/*     INFINITY CODE 2013-2014      */
+/*   http://www.infinity-code.com   */
+
+using System.Xml;
 using UnityEditor;
 using UnityEngine;
 

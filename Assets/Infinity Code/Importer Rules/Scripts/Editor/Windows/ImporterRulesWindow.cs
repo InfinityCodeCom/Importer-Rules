@@ -1,4 +1,7 @@
-﻿using System.Collections.Generic;
+﻿/*     INFINITY CODE 2013-2014      */
+/*   http://www.infinity-code.com   */
+
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;

@@ -1,4 +1,7 @@
-﻿using System.Linq;
+﻿/*     INFINITY CODE 2013-2014      */
+/*   http://www.infinity-code.com   */
+
+using System.Linq;
 using System.Xml;
 using UnityEditor;
 using UnityEngine;

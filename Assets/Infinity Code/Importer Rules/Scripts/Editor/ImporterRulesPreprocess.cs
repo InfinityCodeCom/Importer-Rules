@@ -1,8 +1,9 @@
-﻿using System.Collections.Generic;
-using System.Threading;
+﻿/*     INFINITY CODE 2013-2014      */
+/*   http://www.infinity-code.com   */
+
+using System.Collections.Generic;
 using InfinityCode.ImporterRules;
 using UnityEditor;
-using UnityEngine;
 
 public class ImporterRulesPreprocess: AssetPostprocessor
 {
