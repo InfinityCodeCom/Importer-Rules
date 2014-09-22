@@ -17,6 +17,7 @@ public class ImporterRulesWindow : EditorWindow
     private const string settingsFilename = "ImporterRules.xml";
 
     public static bool logUserRules = true;
+    internal static bool ignoreApplyFirstRule = false;
     private static List<ImporterRule> rules;
     private static ImporterRulesWindow wnd;
 
@@ -37,6 +38,7 @@ public class ImporterRulesWindow : EditorWindow
 
     public static bool ApplyFirstRule(ImporterRulesTypes assetType, string assetPath, AssetImporter assetImporter)
     {
+        if (ignoreApplyFirstRule) return false;
         if (rules == null) Load();
         List<ImporterRule> currentRules = rules.Where(r => r.enabled && r.type == assetType).ToList();
         if (currentRules.Count == 0) return false;

@@ -72,30 +72,46 @@ namespace InfinityCode.ImporterRules
 
         private void ApplyToExists()
         {
+            ImporterRulesWindow.ignoreApplyFirstRule = true;
+
             Object[] objects = null;
-            if (type == ImporterRulesTypes.texture) objects = Resources.FindObjectsOfTypeAll<Texture>();
+            if (type == ImporterRulesTypes.texture) objects = Resources.FindObjectsOfTypeAll<TextureImporter>();
+            else if (type == ImporterRulesTypes.trueTypeFont) objects = Resources.FindObjectsOfTypeAll<TrueTypeFontImporter>();
+            else if (type == ImporterRulesTypes.movie) objects = Resources.FindObjectsOfTypeAll<MovieImporter>();
+            else if (type == ImporterRulesTypes.model) objects = Resources.FindObjectsOfTypeAll<ModelImporter>();
+            else if (type == ImporterRulesTypes.audio) objects = Resources.FindObjectsOfTypeAll<AudioImporter>();
 
             if (objects == null || objects.Length == 0) return;
 
             foreach (Object obj in objects)
             {
                 string assetPath = AssetDatabase.GetAssetPath(obj);
+                if (string.IsNullOrEmpty(assetPath)) continue;
+
                 if (CheckPath(assetPath))
                 {
-                    AssetImporter assetImporter = AssetImporter.GetAtPath(assetPath);
+                    AssetImporter assetImporter = obj as AssetImporter;
+                    if (type == ImporterRulesTypes.movie || type == ImporterRulesTypes.trueTypeFont) ImporterRulesPreprocess.AddWaitPath(assetPath);
+                    
                     Apply(assetImporter, assetPath);
                     AssetDatabase.ImportAsset(assetPath, ImportAssetOptions.ForceUpdate);
                 }
             }
+
+            ImporterRulesWindow.ignoreApplyFirstRule = false;
         }
 
         public bool CheckPath(string assetPath)
         {
+            //Debug.Log(assetPath);
+            if (string.IsNullOrEmpty(assetPath)) return false;
             if (pathComparer == ImporterRulesPathComparer.allAssets) return true;
             if (pathComparer != ImporterRulesPathComparer.regex &&  string.IsNullOrEmpty(path)) return true;
             if (pathComparer == ImporterRulesPathComparer.regex && string.IsNullOrEmpty(pattern)) return true;
-            if (path.Length > assetPath.Length) return false;
+
             assetPath = assetPath.Substring(7).ToLower();
+
+            if (path.Length > assetPath.Length) return false;
 
             string curPath = path.ToLower();
             if (pathComparer == ImporterRulesPathComparer.startWith)
@@ -145,6 +161,7 @@ namespace InfinityCode.ImporterRules
             {
                 GUILayout.BeginHorizontal();
                 path = EditorGUILayout.TextField("Path: ", path);
+                GUI.SetNextControlName("PathBrowseButton");
                 if (GUILayout.Button(new GUIContent("...", "Browse"), GUILayout.ExpandWidth(false)))
                 {
                     string folderPath = EditorUtility.OpenFolderPanel("Path", Application.dataPath, "");
@@ -159,6 +176,7 @@ namespace InfinityCode.ImporterRules
                             path = folderPath.Substring(Application.dataPath.Length + 1) + "/";
                         }
                         else path = "";
+                        GUI.FocusControl("PathBrowseButton");
                     }
                 }
                 GUILayout.EndHorizontal();

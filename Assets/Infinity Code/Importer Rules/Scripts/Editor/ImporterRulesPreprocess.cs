@@ -8,7 +8,13 @@ using UnityEditor;
 public class ImporterRulesPreprocess: AssetPostprocessor
 {
     private static bool allowPostprocess = true;
-    private static List<string> waitPaths;
+    public static List<string> waitPaths;
+
+    public static void AddWaitPath(string assetPath)
+    {
+        if (waitPaths == null) waitPaths = new List<string>();
+        waitPaths.Add(assetPath);
+    }
 
     private static void OnPostprocessAllAssets (string[] importedAssets, string[] deletedAssets, string[] movedAssets, string[] movedFromAssetPaths)
     {

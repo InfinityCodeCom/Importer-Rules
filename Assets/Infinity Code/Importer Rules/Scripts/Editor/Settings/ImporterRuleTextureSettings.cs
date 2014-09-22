@@ -55,8 +55,6 @@ namespace InfinityCode.ImporterRules
             "Right", "BottomLeft", "Bottom", "BottomRight", "Custom"
         };
 
-        private static readonly string[] spriteModeOptions = {"Single", "Multiple"};
-
         private static readonly string[] kMaxTextureSizeStrings =
         {
             "32", "64", "128", "256", "512", "1024", "2048",
@@ -105,19 +103,35 @@ namespace InfinityCode.ImporterRules
 
         public ImporterRuleTextureSettings()
         {
+            InitSettings();
+        }
+
+        private void InitSettings(int maxTextureSize = 1024, TextureImporterFormat textureFormat = TextureImporterFormat.AutomaticCompressed)
+        {
             settings = new TextureImporterSettings
             {
-                maxTextureSize = 1024,
+                maxTextureSize = maxTextureSize,
                 wrapMode = TextureWrapMode.Repeat,
                 filterMode = FilterMode.Bilinear,
-                textureFormat = TextureImporterFormat.AutomaticCompressed,
+                textureFormat = textureFormat,
                 heightmapScale = 0.25f,
                 aniso = 1,
                 spriteAlignment = 0,
-                spriteMode = 1,
                 spritePixelsToUnits = 100,
-                generateCubemap = TextureImporterGenerateCubemap.FullCubemap
             };
+
+            settings.mipmapEnabled = textureType == TextureImporterType.Image || textureType == TextureImporterType.Advanced || textureType == TextureImporterType.Reflection;
+            settings.linearTexture = textureType == TextureImporterType.Bump || textureType == TextureImporterType.GUI;
+            settings.npotScale = (textureType == TextureImporterType.GUI || textureType == TextureImporterType.Sprite)
+                ? TextureImporterNPOTScale.None
+                : TextureImporterNPOTScale.ToNearest;
+            settings.spriteMode = (textureType == TextureImporterType.Sprite) ? 1 : 0;
+            settings.readable = textureType == TextureImporterType.Cursor;
+            settings.generateCubemap = (textureType == TextureImporterType.Reflection)
+                ? TextureImporterGenerateCubemap.FullCubemap
+                : TextureImporterGenerateCubemap.None;
+
+            settings.ApplyTextureType(textureType, true);
         }
 
         private static string[] BuildTextureStrings(int[] textureFormatValues)
@@ -136,7 +150,7 @@ namespace InfinityCode.ImporterRules
             if (newTextureImporterType != (int) textureType)
             {
                 textureType = (TextureImporterType) newTextureImporterType;
-                settings.ApplyTextureType(textureType, true);
+                InitSettings(settings.maxTextureSize, settings.textureFormat);
             }
 
             switch (textureType)
@@ -284,14 +298,11 @@ namespace InfinityCode.ImporterRules
         public override void Load(XmlNode node)
         {
             string typeStr = "";
-            if (node.TryGetValue("TextureType", ref typeStr))
-            {
-                textureType = (TextureImporterType) Enum.Parse(typeof (TextureImporterType), typeStr);
-                settings.ApplyTextureType(textureType, true);
-            }
+            if (node.TryGetValue("TextureType", ref typeStr)) textureType = (TextureImporterType) Enum.Parse(typeof (TextureImporterType), typeStr);
 
-            PropertyInfo[] props = typeof (TextureImporterSettings).GetProperties();
-            LoadSerialized(node, settings, props);
+            LoadSerialized(node, settings, typeof (TextureImporterSettings).GetProperties());
+
+            settings.ApplyTextureType(textureType, true);
         }
 
         private void OnAdvancedGUI()
@@ -418,24 +429,41 @@ namespace InfinityCode.ImporterRules
 
         private void OnSpriteGUI()
         {
-            int[] optionValues = {1, 2};
-            settings.spriteMode = EditorGUILayout.IntPopup("Sprite Mode", settings.spriteMode, spriteModeOptions,
-                optionValues);
-            settings.spritePixelsToUnits = EditorGUILayout.FloatField("Pixels to Units", settings.spritePixelsToUnits);
-
             if (textureType == TextureImporterType.Advanced)
             {
-                settings.spriteMeshType =
-                    (SpriteMeshType) EditorGUILayout.EnumPopup("Mesh Type", settings.spriteMeshType);
-                settings.spriteExtrude =
-                    (uint) EditorGUILayout.IntSlider("Extrude Edges", (int) settings.spriteExtrude, 0, 32);
+                int[] optionValues = { 0, 1, 2 };
+                string[] spriteModeOptions = {"None", "Single", "Multiple"};
+                settings.spriteMode = EditorGUILayout.IntPopup("Sprite Mode", settings.spriteMode, spriteModeOptions,
+                    optionValues);
+            }
+            else
+            {
+                int[] optionValues = { 1, 2 };
+                string[] spriteModeOptions = { "Single", "Multiple" };
+                settings.spriteMode = EditorGUILayout.IntPopup("Sprite Mode", settings.spriteMode, spriteModeOptions,
+                    optionValues);
             }
 
-            if (settings.spriteMode == 1)
-                settings.spriteAlignment = EditorGUILayout.Popup("Pivot", settings.spriteAlignment,
-                    spriteAlignmentOptions);
-            if (settings.spriteAlignment == 9)
-                settings.spritePivot = EditorGUILayout.Vector2Field("", settings.spritePivot);
+            if (settings.spriteMode != 0)
+            {
+                EditorGUI.indentLevel++;
+                settings.spritePixelsToUnits = EditorGUILayout.FloatField("Pixels to Units", settings.spritePixelsToUnits);
+
+                if (textureType == TextureImporterType.Advanced)
+                {
+                    settings.spriteMeshType =
+                        (SpriteMeshType)EditorGUILayout.EnumPopup("Mesh Type", settings.spriteMeshType);
+                    settings.spriteExtrude =
+                        (uint)EditorGUILayout.IntSlider("Extrude Edges", (int)settings.spriteExtrude, 0, 32);
+                }
+
+                if (settings.spriteMode == 1)
+                    settings.spriteAlignment = EditorGUILayout.Popup("Pivot", settings.spriteAlignment,
+                        spriteAlignmentOptions);
+                if (settings.spriteAlignment == 9)
+                    settings.spritePivot = EditorGUILayout.Vector2Field("", settings.spritePivot);
+                EditorGUI.indentLevel--;
+            }
         }
 
         public override void Save(XmlElement element)
@@ -449,6 +477,7 @@ namespace InfinityCode.ImporterRules
         {
             TextureImporter textureImporter = importer as TextureImporter;
             textureImporter.SetTextureSettings(settings);
+            textureImporter.textureType = textureType;
         }
 
         private void SetCookieMode(CookieMode cm)
