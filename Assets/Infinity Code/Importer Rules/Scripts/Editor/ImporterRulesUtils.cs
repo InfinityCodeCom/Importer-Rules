@@ -67,6 +67,11 @@ namespace InfinityCode.ImporterRules
             return el;
         }
 
+        public static string FixPath(this string path)
+        {
+            return path.Replace("\\", "/");
+        }
+
         public static void SetValue(this MemberInfo memberInfo, object target, object value)
         {
             if (memberInfo is PropertyInfo) ((PropertyInfo) memberInfo).SetValue(target, value, null);

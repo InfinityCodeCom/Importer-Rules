@@ -79,6 +79,12 @@ public class ImporterRulesWindow : EditorWindow
             AssetImporter assetImporter = AssetImporter.GetAtPath(assetPath);
             if (assetImporter is ModelImporter) allowCreate = true;
         }
+        else
+        {
+            string assetPath = AssetDatabase.GetAssetPath(selection);
+            FileAttributes attr = File.GetAttributes(assetPath);
+            if ((attr & FileAttributes.Directory) == FileAttributes.Directory) allowCreate = true;
+        }
 
         if (!allowCreate)
         {
@@ -132,6 +138,8 @@ public class ImporterRulesWindow : EditorWindow
             GenericMenu menu = new GenericMenu();
             menu.AddItem(new GUIContent("Disable all rules"), false, DisableAllRules);
             menu.AddItem(new GUIContent("Delete all rules"), false, DeleteAllRules);
+            menu.AddItem(new GUIContent("Export rules"), false, ExportRules);
+            menu.AddItem(new GUIContent("Import rules"), false, ImportRules);
             menu.ShowAsContext();
         }
 
@@ -158,6 +166,12 @@ public class ImporterRulesWindow : EditorWindow
         else newRule.name += " 2";
     }
 
+    private void ExportRules()
+    {
+        string filename = EditorUtility.SaveFilePanel("Export rules", Application.dataPath, "rules", "xml");
+        if (!string.IsNullOrEmpty(filename)) Save(filename);
+    }
+
     public static string GetNewRuleName()
     {
         const string defName = "New rule";
@@ -171,13 +185,28 @@ public class ImporterRulesWindow : EditorWindow
         return name;
     }
 
-    private static void Load()
+    private void ImportRules()
     {
-        rules = new List<ImporterRule>();
+        string filename = EditorUtility.OpenFilePanel("Import rules", Application.dataPath, "xml");
+        if (!string.IsNullOrEmpty(filename))
+        {
+            bool removeExistsRules = false;
+            if (rules != null && rules.Count > 0)
+            {
+                removeExistsRules = EditorUtility.DisplayDialog("Remove rules", "Remove the existing rules?", "Remove", "No");
+            }
+            Load(filename, removeExistsRules);
+        }
+    }
 
-        if (!File.Exists(settingsFilename)) return;
+    private static void Load(string filename = null, bool removeExistsRules = false)
+    {
+        if (string.IsNullOrEmpty(filename)) filename = settingsFilename;
+        if (rules == null || removeExistsRules) rules = new List<ImporterRule>();
+
+        if (!File.Exists(filename)) return;
         XmlDocument document = new XmlDocument();
-        document.Load(settingsFilename);
+        document.Load(filename);
 
         XmlNode firstNode = document.FirstChild;
 
@@ -235,8 +264,10 @@ public class ImporterRulesWindow : EditorWindow
         wnd.Repaint();
     }
 
-    public static void Save()
+    public static void Save(string filename = default(string))
     {
+        if (string.IsNullOrEmpty(filename)) filename = settingsFilename;
+
         XmlDocument document = new XmlDocument();
         XmlElement firstNode = document.CreateChild("Rules");
 
@@ -248,7 +279,7 @@ public class ImporterRulesWindow : EditorWindow
             rule.Save(ruleElement);
         }
 
-        File.WriteAllText(settingsFilename, document.InnerXml);
+        File.WriteAllText(filename, document.InnerXml);
     }
 
     public static void SetRuleIndex(ImporterRule rule, int index)

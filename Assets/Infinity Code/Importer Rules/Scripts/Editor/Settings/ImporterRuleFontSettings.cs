@@ -53,7 +53,7 @@ namespace InfinityCode.ImporterRules
             SaveSerialized(element, this, GetType().GetFields());
         }
 
-        public override void SetSettingsToImporter(AssetImporter importer)
+        public override void SetSettingsToImporter(AssetImporter importer, string assetPath)
         {
             FieldsToProps(this, importer);
         }

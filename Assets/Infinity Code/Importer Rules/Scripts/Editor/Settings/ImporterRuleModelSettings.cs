@@ -129,7 +129,7 @@ namespace InfinityCode.ImporterRules
             SaveSerialized(element, settings, props);
         }
 
-        public override void SetSettingsToImporter(AssetImporter modelImporter)
+        public override void SetSettingsToImporter(AssetImporter modelImporter, string assetPath)
         {
             FieldsToProps(settings, modelImporter);
         }

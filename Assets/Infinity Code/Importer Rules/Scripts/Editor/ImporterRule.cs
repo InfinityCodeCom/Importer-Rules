@@ -2,6 +2,8 @@
 /*   http://www.infinity-code.com   */
 
 using System;
+using System.IO;
+using System.Linq;
 using System.Text.RegularExpressions;
 using System.Xml;
 using UnityEditor;
@@ -67,53 +69,62 @@ namespace InfinityCode.ImporterRules
         public void Apply(AssetImporter assetImporter, string assetPath)
         {
             if (ImporterRulesWindow.logUserRules) Debug.Log("Apply rule [" + name + "]: " + assetPath.Substring(7));
-            activeSettings.SetSettingsToImporter(assetImporter);
+            activeSettings.SetSettingsToImporter(assetImporter, assetPath);
         }
 
         private void ApplyToExists()
         {
             ImporterRulesWindow.ignoreApplyFirstRule = true;
 
-            Object[] objects = null;
-            if (type == ImporterRulesTypes.texture) objects = Resources.FindObjectsOfTypeAll<TextureImporter>();
-            else if (type == ImporterRulesTypes.trueTypeFont) objects = Resources.FindObjectsOfTypeAll<TrueTypeFontImporter>();
-            else if (type == ImporterRulesTypes.movie) objects = Resources.FindObjectsOfTypeAll<MovieImporter>();
-            else if (type == ImporterRulesTypes.model) objects = Resources.FindObjectsOfTypeAll<ModelImporter>();
-            else if (type == ImporterRulesTypes.audio) objects = Resources.FindObjectsOfTypeAll<AudioImporter>();
+            string typeStr = default(string);
+
+            if (type == ImporterRulesTypes.texture) typeStr = "texture";
+            else if (type == ImporterRulesTypes.trueTypeFont) typeStr = "font";
+            else if (type == ImporterRulesTypes.movie) typeStr = "movietexture";
+            else if (type == ImporterRulesTypes.model) typeStr = "model";
+            else if (type == ImporterRulesTypes.audio) typeStr = "audioclip";
+
+            if (string.IsNullOrEmpty(typeStr)) return;
+
+            string[] files = AssetDatabase.FindAssets("t:" + typeStr).Select(guid => AssetDatabase.GUIDToAssetPath(guid)).Where(fn => !string.IsNullOrEmpty(fn) && CheckPath(fn)).ToArray();
+            if (files.Length == 0) return;
+            Object[] objects = files.Select(fn => AssetImporter.GetAtPath(fn)).ToArray();
 
             if (objects == null || objects.Length == 0) return;
 
-            foreach (Object obj in objects)
+            for (int i = 0; i < objects.Length; i++)
             {
-                string assetPath = AssetDatabase.GetAssetPath(obj);
-                if (string.IsNullOrEmpty(assetPath)) continue;
+                Object obj = objects[i];
+                string assetPath = files[i];
 
-                if (CheckPath(assetPath))
-                {
-                    AssetImporter assetImporter = obj as AssetImporter;
-                    if (type == ImporterRulesTypes.movie || type == ImporterRulesTypes.trueTypeFont) ImporterRulesPreprocess.AddWaitPath(assetPath);
-                    
-                    Apply(assetImporter, assetPath);
-                    AssetDatabase.ImportAsset(assetPath, ImportAssetOptions.ForceUpdate);
-                }
+                EditorUtility.DisplayProgressBar("Apply rule", assetPath, i / (float)objects.Length);
+
+                AssetImporter assetImporter = obj as AssetImporter;
+                if (type == ImporterRulesTypes.audio && assetImporter is MovieImporter) continue;
+                if (type == ImporterRulesTypes.movie || type == ImporterRulesTypes.trueTypeFont)
+                    ImporterRulesPreprocess.AddWaitPath(assetPath);
+
+                Apply(assetImporter, assetPath);
+                AssetDatabase.ImportAsset(assetPath, ImportAssetOptions.ForceUpdate);
             }
+
+            EditorUtility.ClearProgressBar();
 
             ImporterRulesWindow.ignoreApplyFirstRule = false;
         }
 
         public bool CheckPath(string assetPath)
         {
-            //Debug.Log(assetPath);
             if (string.IsNullOrEmpty(assetPath)) return false;
             if (pathComparer == ImporterRulesPathComparer.allAssets) return true;
             if (pathComparer != ImporterRulesPathComparer.regex &&  string.IsNullOrEmpty(path)) return true;
             if (pathComparer == ImporterRulesPathComparer.regex && string.IsNullOrEmpty(pattern)) return true;
 
-            assetPath = assetPath.Substring(7).ToLower();
+            assetPath = assetPath.FixPath().Substring(7).ToLower();
 
             if (path.Length > assetPath.Length) return false;
 
-            string curPath = path.ToLower();
+            string curPath = path.FixPath().ToLower();
             if (pathComparer == ImporterRulesPathComparer.startWith)
             {
                 string str = assetPath.Substring(0, path.Length);
@@ -266,6 +277,15 @@ namespace InfinityCode.ImporterRules
         public void LoadFromAsset(Object obj)
         {
             string assetPath = AssetDatabase.GetAssetPath(obj);
+
+            FileAttributes attr = File.GetAttributes(assetPath);
+            if ((attr & FileAttributes.Directory) == FileAttributes.Directory)
+            {
+                path = assetPath.Substring(7) + "/";
+                pathComparer = ImporterRulesPathComparer.startWith;
+                return;
+            }
+
             AssetImporter importer = AssetImporter.GetAtPath(assetPath);
 
             if (importer == null) return;

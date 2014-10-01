@@ -37,7 +37,7 @@ namespace InfinityCode.ImporterRules
             element.CreateChild("LinearTexture", linearTexture);
         }
 
-        public override void SetSettingsToImporter(AssetImporter importer)
+        public override void SetSettingsToImporter(AssetImporter importer, string assetPath)
         {
             MovieImporter movieImporter = importer as MovieImporter;
             movieImporter.linearTexture = linearTexture;

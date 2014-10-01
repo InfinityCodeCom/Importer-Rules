@@ -133,6 +133,6 @@ namespace InfinityCode.ImporterRules
         public abstract void GetSettingsFromImporter(AssetImporter importer);
         public abstract void Load(XmlNode node);
         public abstract void Save(XmlElement element);
-        public abstract void SetSettingsToImporter(AssetImporter importer);
+        public abstract void SetSettingsToImporter(AssetImporter importer, string assetPath);
     }
 }

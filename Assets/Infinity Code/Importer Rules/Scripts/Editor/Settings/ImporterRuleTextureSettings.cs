@@ -101,6 +101,8 @@ namespace InfinityCode.ImporterRules
             (int) TextureImporterFormat.RGBA32
         };
 
+        private bool useOriginalSize = false;
+
         public ImporterRuleTextureSettings()
         {
             InitSettings();
@@ -207,6 +209,8 @@ namespace InfinityCode.ImporterRules
             settings.maxTextureSize = EditorGUILayout.IntPopup("Max Size", settings.maxTextureSize,
                 kMaxTextureSizeStrings, kMaxTextureSizeValues);
 
+            useOriginalSize = EditorGUILayout.Toggle("Use Original image size", useOriginalSize);
+
             if (textureType == TextureImporterType.Cookie)
             {
                 EditorGUI.BeginDisabledGroup(true);
@@ -299,6 +303,8 @@ namespace InfinityCode.ImporterRules
         {
             string typeStr = "";
             if (node.TryGetValue("TextureType", ref typeStr)) textureType = (TextureImporterType) Enum.Parse(typeof (TextureImporterType), typeStr);
+
+            node.TryGetValue("UseOriginalSize", ref useOriginalSize);
 
             LoadSerialized(node, settings, typeof (TextureImporterSettings).GetProperties());
 
@@ -469,15 +475,26 @@ namespace InfinityCode.ImporterRules
         public override void Save(XmlElement element)
         {
             element.CreateChild("TextureType", textureType.ToString());
+            element.CreateChild("UseOriginalSize", useOriginalSize);
             PropertyInfo[] props = typeof (TextureImporterSettings).GetProperties();
             SaveSerialized(element, settings, props);
         }
 
-        public override void SetSettingsToImporter(AssetImporter importer)
+        public override void SetSettingsToImporter(AssetImporter importer, string assetPath)
         {
             TextureImporter textureImporter = importer as TextureImporter;
             textureImporter.SetTextureSettings(settings);
             textureImporter.textureType = textureType;
+
+            if (useOriginalSize)
+            {
+                int width = 0, height = 0;
+                if (ImporterRuleImageUtils.GetImageSize(assetPath, out width, out height))
+                {
+                    int max = Mathf.Clamp(Mathf.Max(width, height), 32, 4096);
+                    textureImporter.maxTextureSize = Mathf.ClosestPowerOfTwo(max);
+                }
+            }
         }
 
         private void SetCookieMode(CookieMode cm)
