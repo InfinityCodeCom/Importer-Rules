@@ -1,4 +1,4 @@
-﻿/*     INFINITY CODE 2013-2014      */
+﻿/*     INFINITY CODE 2013-2015      */
 /*   http://www.infinity-code.com   */
 
 using System.Collections.Generic;
@@ -27,7 +27,6 @@ public class ImporterRulesWindow : EditorWindow
     {
         get { return rules.Count; }
     }
-    
 
     public static void AddRule(ImporterRule rule)
     {
@@ -146,8 +145,8 @@ public class ImporterRulesWindow : EditorWindow
         if (GUILayout.Button("Help", EditorStyles.toolbarButton, GUILayout.ExpandWidth(false)))
         {
             GenericMenu menu = new GenericMenu();
-            menu.AddItem(new GUIContent("View online documentation"), false, OnViewDocs);
-            menu.AddItem(new GUIContent("Open product page"), false, OnProductPage);
+            menu.AddItem(new GUIContent("Online documentation"), false, OnViewDocs);
+            menu.AddItem(new GUIContent("Product page"), false, OnProductPage);
             menu.AddItem(new GUIContent("Support"), false, OnSendMail);
             menu.ShowAsContext();
         } 

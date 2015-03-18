@@ -1,5 +1,7 @@
-﻿/*     INFINITY CODE 2013-2014      */
+﻿/*     INFINITY CODE 2013-2015      */
 /*   http://www.infinity-code.com   */
+
+#if UNITY_4_5 || UNITY_4_6
 
 using System.Xml;
 using UnityEditor;
@@ -60,3 +62,5 @@ namespace InfinityCode.ImporterRules
         }
     }
 }
+
+#endif

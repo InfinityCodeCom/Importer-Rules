@@ -1,4 +1,4 @@
-﻿/*     INFINITY CODE 2013-2014      */
+﻿/*     INFINITY CODE 2013-2015      */
 /*   http://www.infinity-code.com   */
 
 using System;
@@ -24,7 +24,11 @@ namespace InfinityCode.ImporterRules
         public ImporterRulesPathComparer pathComparer = ImporterRulesPathComparer.allAssets;
         public ImporterRulesTypes type = ImporterRulesTypes.texture;
 
+#if UNITY_4_5 || UNITY_4_6
         [SerializeField] private ImporterRuleAudioSettings audioSettings;
+#else
+        [SerializeField] private ImporterRuleAudioSettingsUFive audioSettings;
+#endif
         [SerializeField] private ImporterRuleFontSettings fontSettings;
         [SerializeField] private ImporterRuleModelSettings modelSettings;
         [SerializeField] private ImporterRuleMovieSettings movieSettings;
@@ -267,7 +271,11 @@ namespace InfinityCode.ImporterRules
 
         private void InitSettings()
         {
+#if UNITY_4_5 || UNITY_4_6
             audioSettings = new ImporterRuleAudioSettings();
+#else
+            audioSettings = new ImporterRuleAudioSettingsUFive();
+#endif
             fontSettings = new ImporterRuleFontSettings();
             modelSettings = new ImporterRuleModelSettings();
             movieSettings = new ImporterRuleMovieSettings();

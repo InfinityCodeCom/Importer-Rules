@@ -1,4 +1,4 @@
-﻿/*     INFINITY CODE 2013-2014      */
+﻿/*     INFINITY CODE 2013-2015      */
 /*   http://www.infinity-code.com   */
 
 using System.IO;
