@@ -12,4 +12,4 @@ Supported types of assets: Texture, Model, Audio, Movie, TrueType Font.<br>
 •	For each rule can be defined by checking the file's path; <br>
 •	Each rule can be applied to existing assets.<br>
 <br>
-<a href="infinity-code.com/en/products/">More interesting assets.</a>
+<a href="http://infinity-code.com/en/products/">More interesting assets.</a>
