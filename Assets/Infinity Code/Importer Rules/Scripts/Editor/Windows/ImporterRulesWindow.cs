@@ -10,6 +10,7 @@ using System.Xml;
 using InfinityCode.ImporterRules;
 using UnityEditor;
 using UnityEngine;
+using Debug = UnityEngine.Debug;
 
 [System.Serializable]
 public class ImporterRulesWindow : EditorWindow
@@ -218,7 +219,7 @@ public class ImporterRulesWindow : EditorWindow
     private void OnEnable()
     {
         wnd = this;
-        Load();
+        Load(null, true);
     }
 
     private void OnDestroy()
