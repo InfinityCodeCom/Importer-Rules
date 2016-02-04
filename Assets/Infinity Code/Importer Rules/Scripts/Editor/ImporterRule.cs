@@ -1,4 +1,4 @@
-﻿/*     INFINITY CODE 2013-2015      */
+﻿/*     INFINITY CODE 2013-2016      */
 /*   http://www.infinity-code.com   */
 
 using System;
@@ -121,12 +121,12 @@ namespace InfinityCode.ImporterRules
         {
             if (string.IsNullOrEmpty(assetPath)) return false;
             if (pathComparer == ImporterRulesPathComparer.allAssets) return true;
-            if (pathComparer != ImporterRulesPathComparer.regex &&  string.IsNullOrEmpty(path)) return true;
+            if (pathComparer != ImporterRulesPathComparer.regex && string.IsNullOrEmpty(path)) return true;
             if (pathComparer == ImporterRulesPathComparer.regex && string.IsNullOrEmpty(pattern)) return true;
 
             assetPath = assetPath.FixPath().Substring(7).ToLower();
 
-            if (path.Length > assetPath.Length) return false;
+            if (pathComparer != ImporterRulesPathComparer.regex && path.Length > assetPath.Length) return false;
 
             string curPath = path.FixPath().ToLower();
             if (pathComparer == ImporterRulesPathComparer.startWith)
@@ -137,6 +137,10 @@ namespace InfinityCode.ImporterRules
             else if (pathComparer == ImporterRulesPathComparer.contains)
             {
                 if (assetPath.Contains(curPath)) return true;
+            }
+            else if (pathComparer == ImporterRulesPathComparer.notContains)
+            {
+                if (!assetPath.Contains(curPath)) return true;
             }
             else if (pathComparer == ImporterRulesPathComparer.regex)
             {

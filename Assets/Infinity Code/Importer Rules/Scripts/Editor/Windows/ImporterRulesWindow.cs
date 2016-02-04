@@ -1,4 +1,4 @@
-﻿/*     INFINITY CODE 2013-2015      */
+﻿/*     INFINITY CODE 2013-2016      */
 /*   http://www.infinity-code.com   */
 
 using System.Collections.Generic;

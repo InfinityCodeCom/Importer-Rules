@@ -1,4 +1,4 @@
-/*     INFINITY CODE 2013-2015      */
+/*     INFINITY CODE 2013-2016      */
 /*   http://www.infinity-code.com   */
 
 using System;
@@ -121,40 +121,6 @@ namespace InfinityCode.ImporterRules
         public ImporterRuleTextureSettings()
         {
             InitSettings();
-        }
-
-        private void InitSettings(int maxTextureSize = 1024, TextureImporterFormat textureFormat = TextureImporterFormat.AutomaticCompressed)
-        {
-            settings = new TextureImporterSettings
-            {
-                maxTextureSize = maxTextureSize,
-                wrapMode = TextureWrapMode.Repeat,
-                filterMode = FilterMode.Bilinear,
-                textureFormat = textureFormat,
-                heightmapScale = 0.25f,
-                aniso = 1,
-                spriteAlignment = 0,
-#if UNITY_4_5
-                spritePixelsToUnits = 100,
-#else
-                spritePixelsPerUnit = 100
-#endif
-            };
-
-            settings.mipmapEnabled = textureType == TextureImporterType.Image || textureType == TextureImporterType.Advanced || textureType == reflectionType;
-
-            settings.linearTexture = textureType == TextureImporterType.Bump || textureType == TextureImporterType.GUI;
-            settings.npotScale = (textureType == TextureImporterType.GUI || textureType == TextureImporterType.Sprite)
-                ? TextureImporterNPOTScale.None
-                : TextureImporterNPOTScale.ToNearest;
-            settings.spriteMode = (textureType == TextureImporterType.Sprite) ? 1 : 0;
-            settings.readable = textureType == TextureImporterType.Cursor;
-
-            settings.generateCubemap = (textureType == reflectionType)
-                ? TextureImporterGenerateCubemap.FullCubemap
-                : TextureImporterGenerateCubemap.None;
-
-            settings.ApplyTextureType(textureType, true);
         }
 
         private static string[] BuildTextureStrings(int[] textureFormatValues)
@@ -318,6 +284,40 @@ namespace InfinityCode.ImporterRules
             if (tf == TextureImporterFormat.AutomaticTruecolor) return "Automatic Truecolor";
 
             return "Unknown";
+        }
+
+        private void InitSettings(int maxTextureSize = 1024, TextureImporterFormat textureFormat = TextureImporterFormat.AutomaticCompressed)
+        {
+            settings = new TextureImporterSettings
+            {
+                maxTextureSize = maxTextureSize,
+                wrapMode = TextureWrapMode.Repeat,
+                filterMode = FilterMode.Bilinear,
+                textureFormat = textureFormat,
+                heightmapScale = 0.25f,
+                aniso = 1,
+                spriteAlignment = 0,
+#if UNITY_4_5
+                spritePixelsToUnits = 100,
+#else
+                spritePixelsPerUnit = 100
+#endif
+            };
+
+            settings.mipmapEnabled = textureType == TextureImporterType.Image || textureType == TextureImporterType.Advanced || textureType == reflectionType;
+
+            settings.linearTexture = textureType == TextureImporterType.Bump || textureType == TextureImporterType.GUI;
+            settings.npotScale = (textureType == TextureImporterType.GUI || textureType == TextureImporterType.Sprite)
+                ? TextureImporterNPOTScale.None
+                : TextureImporterNPOTScale.ToNearest;
+            settings.spriteMode = (textureType == TextureImporterType.Sprite) ? 1 : 0;
+            settings.readable = textureType == TextureImporterType.Cursor;
+
+            settings.generateCubemap = (textureType == reflectionType)
+                ? TextureImporterGenerateCubemap.FullCubemap
+                : TextureImporterGenerateCubemap.None;
+
+            settings.ApplyTextureType(textureType, true);
         }
 
         public override void Load(XmlNode node)

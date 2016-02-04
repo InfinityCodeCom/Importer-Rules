@@ -1,9 +1,10 @@
-﻿/*     INFINITY CODE 2013-2015      */
+﻿/*     INFINITY CODE 2013-2016      */
 /*   http://www.infinity-code.com   */
 
 using System.Collections.Generic;
 using InfinityCode.ImporterRules;
 using UnityEditor;
+using UnityEngine;
 
 public class ImporterRulesPreprocess: AssetPostprocessor
 {
@@ -39,17 +40,6 @@ public class ImporterRulesPreprocess: AssetPostprocessor
         allowPostprocess = true;
     }
 
-    private static void TryApplyRule(string assetPath, AssetImporter assetImporter, ImporterRulesTypes type)
-    {
-        if (waitPaths.Contains(assetPath)) waitPaths.Remove(assetPath);
-        else if (ImporterRulesWindow.ApplyFirstRule(type, assetPath, assetImporter))
-        {
-            waitPaths.Add(assetPath);
-            AssetDatabase.ImportAsset(assetPath, ImportAssetOptions.ForceUpdate);
-        }
-            
-    }
-
     private void OnPreprocessAudio()
     {
         ImporterRulesWindow.ApplyFirstRule(ImporterRulesTypes.audio, assetPath, assetImporter);
@@ -63,5 +53,16 @@ public class ImporterRulesPreprocess: AssetPostprocessor
     private void OnPreprocessTexture()
     {
         ImporterRulesWindow.ApplyFirstRule(ImporterRulesTypes.texture, assetPath, assetImporter);
+    }
+
+    private static void TryApplyRule(string assetPath, AssetImporter assetImporter, ImporterRulesTypes type)
+    {
+        if (waitPaths.Contains(assetPath)) waitPaths.Remove(assetPath);
+        else if (ImporterRulesWindow.ApplyFirstRule(type, assetPath, assetImporter))
+        {
+            waitPaths.Add(assetPath);
+            AssetDatabase.ImportAsset(assetPath, ImportAssetOptions.ForceUpdate);
+        }
+            
     }
 }
