@@ -15,6 +15,8 @@ using Debug = UnityEngine.Debug;
 [System.Serializable]
 public class ImporterRulesWindow : EditorWindow
 {
+    public const string version = "1.3.0.0";
+
     private const string settingsFilename = "ImporterRules.xml";
 
     public static bool logUserRules = true;
@@ -146,9 +148,10 @@ public class ImporterRulesWindow : EditorWindow
         if (GUILayout.Button("Help", EditorStyles.toolbarButton, GUILayout.ExpandWidth(false)))
         {
             GenericMenu menu = new GenericMenu();
-            menu.AddItem(new GUIContent("Online documentation"), false, OnViewDocs);
-            menu.AddItem(new GUIContent("Product page"), false, OnProductPage);
+            menu.AddItem(new GUIContent("Documentation"), false, OnViewDocs);
+            menu.AddItem(new GUIContent("Product Page"), false, OnProductPage);
             menu.AddItem(new GUIContent("Support"), false, OnSendMail);
+            menu.AddItem(new GUIContent("About"), false, ImporterRulesAboutWindow.OpenWindow);
             menu.ShowAsContext();
         } 
 
@@ -253,7 +256,7 @@ public class ImporterRulesWindow : EditorWindow
         Process.Start("http://infinity-code.com/docs/importer-rules");
     }
 
-    [MenuItem("Window/Infinity Code/Importer Rules")]
+    [MenuItem("Window/Infinity Code/Importer Rules/Rules Manager", false, 0)]
     public static void OpenWindow()
     {
         wnd = GetWindow<ImporterRulesWindow>(false, "Importer Rules", true);
