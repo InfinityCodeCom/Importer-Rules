@@ -120,29 +120,34 @@ namespace InfinityCode.ImporterRules
         public bool CheckPath(string assetPath)
         {
             if (string.IsNullOrEmpty(assetPath)) return false;
-            if (pathComparer == ImporterRulesPathComparer.allAssets) return true;
-            if (pathComparer != ImporterRulesPathComparer.regex && string.IsNullOrEmpty(path)) return true;
-            if (pathComparer == ImporterRulesPathComparer.regex && string.IsNullOrEmpty(pattern)) return true;
+            ImporterRulesPathComparer comparer = pathComparer;
+            if (comparer == ImporterRulesPathComparer.allAssets) return true;
+            if (comparer != ImporterRulesPathComparer.regex && string.IsNullOrEmpty(path)) return true;
+            if (comparer == ImporterRulesPathComparer.regex && string.IsNullOrEmpty(pattern)) return true;
 
             assetPath = assetPath.FixPath().Substring(7).ToLower();
 
-            if (pathComparer != ImporterRulesPathComparer.regex && path.Length > assetPath.Length) return false;
+            if (comparer != ImporterRulesPathComparer.regex && path.Length > assetPath.Length)
+            {
+                if (comparer == ImporterRulesPathComparer.notContains) return true;
+                return false;
+            }
 
             string curPath = path.FixPath().ToLower();
-            if (pathComparer == ImporterRulesPathComparer.startWith)
+            if (comparer == ImporterRulesPathComparer.startWith)
             {
                 string str = assetPath.Substring(0, path.Length);
                 if (str == curPath) return true;
             }
-            else if (pathComparer == ImporterRulesPathComparer.contains)
+            else if (comparer == ImporterRulesPathComparer.contains)
             {
                 if (assetPath.Contains(curPath)) return true;
             }
-            else if (pathComparer == ImporterRulesPathComparer.notContains)
+            else if (comparer == ImporterRulesPathComparer.notContains)
             {
                 if (!assetPath.Contains(curPath)) return true;
             }
-            else if (pathComparer == ImporterRulesPathComparer.regex)
+            else if (comparer == ImporterRulesPathComparer.regex)
             {
                 Regex regex = new Regex(pattern);
                 if (regex.IsMatch(assetPath)) return true;
