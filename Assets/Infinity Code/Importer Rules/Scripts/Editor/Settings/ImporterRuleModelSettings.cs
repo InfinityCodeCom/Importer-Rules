@@ -54,34 +54,47 @@ namespace InfinityCode.ImporterRules
                 EditorGUI.indentLevel--;
             }
 
-            GUILayout.Label("Normals & Tangents", EditorStyles.boldLabel);
-            settings.normalImportMode =
-                (ModelImporterTangentSpaceMode) EditorGUILayout.EnumPopup("Normals", settings.normalImportMode);
+            bool allowSmootchingAngle = false;
 
+            GUILayout.Label("Normals & Tangents", EditorStyles.boldLabel);
+
+#if UNITY_4_5 || UNITY_4_6 || UNITY_4_7 || UNITY_5_0 || UNITY_5_1 || UNITY_5_2
+            settings.normalImportMode = (ModelImporterTangentSpaceMode) EditorGUILayout.EnumPopup("Normals", settings.normalImportMode);
             EditorGUI.BeginDisabledGroup(settings.normalImportMode == ModelImporterTangentSpaceMode.None);
 
-            settings.tangentImportMode =
-                (ModelImporterTangentSpaceMode) EditorGUILayout.EnumPopup("Tangents", settings.tangentImportMode);
-
-            bool allowSmootchingAngle = false;
+            settings.tangentImportMode = (ModelImporterTangentSpaceMode) EditorGUILayout.EnumPopup("Tangents", settings.tangentImportMode);
 
             if (settings.normalImportMode == ModelImporterTangentSpaceMode.Calculate)
             {
-                if (settings.tangentImportMode == ModelImporterTangentSpaceMode.Import)
-                    settings.tangentImportMode = ModelImporterTangentSpaceMode.Calculate;
+                if (settings.tangentImportMode == ModelImporterTangentSpaceMode.Import) settings.tangentImportMode = ModelImporterTangentSpaceMode.Calculate;
                 if (settings.tangentImportMode == ModelImporterTangentSpaceMode.Calculate) allowSmootchingAngle = true;
             }
-            else if (settings.normalImportMode == ModelImporterTangentSpaceMode.None)
-                settings.tangentImportMode = ModelImporterTangentSpaceMode.None;
+            else if (settings.normalImportMode == ModelImporterTangentSpaceMode.None) settings.tangentImportMode = ModelImporterTangentSpaceMode.None;
+#else
+            settings.normalImportMode = (ModelImporterNormals)EditorGUILayout.EnumPopup("Normals", settings.normalImportMode);
+            EditorGUI.BeginDisabledGroup(settings.normalImportMode == ModelImporterNormals.None);
+
+            settings.tangentImportMode = (ModelImporterNormals)EditorGUILayout.EnumPopup("Tangents", settings.tangentImportMode);
+
+            if (settings.normalImportMode == ModelImporterNormals.Calculate)
+            {
+                if (settings.tangentImportMode == ModelImporterNormals.Import) settings.tangentImportMode = ModelImporterNormals.Calculate;
+                if (settings.tangentImportMode == ModelImporterNormals.Calculate) allowSmootchingAngle = true;
+            }
+            else if (settings.normalImportMode == ModelImporterNormals.None) settings.tangentImportMode = ModelImporterNormals.None;
+#endif
 
             EditorGUI.BeginDisabledGroup(!allowSmootchingAngle);
 
-            settings.normalSmoothingAngle =
-                Mathf.Round(EditorGUILayout.Slider("Smootching Angle", settings.normalSmoothingAngle, 0, 180));
+            settings.normalSmoothingAngle = Mathf.Round(EditorGUILayout.Slider("Smootching Angle", settings.normalSmoothingAngle, 0, 180));
 
             EditorGUI.EndDisabledGroup();
 
+#if UNITY_4_5 || UNITY_4_6 || UNITY_4_7 || UNITY_5_0 || UNITY_5_1 || UNITY_5_2
             EditorGUI.BeginDisabledGroup(settings.tangentImportMode == ModelImporterTangentSpaceMode.None);
+#else
+            EditorGUI.BeginDisabledGroup(settings.tangentImportMode == ModelImporterNormals.None);
+#endif
 
             settings.splitTangentsAcrossSeams = EditorGUILayout.Toggle("Split Tangents",
                 settings.splitTangentsAcrossSeams);
@@ -94,19 +107,12 @@ namespace InfinityCode.ImporterRules
             settings.importMaterials = EditorGUILayout.Toggle("Import Materials", settings.importMaterials);
             if (settings.importMaterials)
             {
-                settings.materialName =
-                    (ModelImporterMaterialName)
-                        EditorGUILayout.Popup("Material Naming", (int) settings.materialName,
-                            new[] {"By Base Texture Name", "From Models Material", "Model Name + Models Material"});
-                settings.materialSearch =
-                    (ModelImporterMaterialSearch)
-                        EditorGUILayout.Popup("Material Search", (int) settings.materialSearch,
-                            new[] {"Local Materials Folder", "Recursive-Up", "Project-Wide"});
+                settings.materialName = (ModelImporterMaterialName) EditorGUILayout.Popup("Material Naming", (int) settings.materialName, new[] {"By Base Texture Name", "From Models Material", "Model Name + Models Material"});
+                settings.materialSearch = (ModelImporterMaterialSearch) EditorGUILayout.Popup("Material Search", (int) settings.materialSearch, new[] {"Local Materials Folder", "Recursive-Up", "Project-Wide"});
             }
 
             GUILayout.Label("Rig", EditorStyles.boldLabel);
-            settings.animationType =
-                (ModelImporterAnimationType) EditorGUILayout.EnumPopup("Animation Type", settings.animationType);
+            settings.animationType = (ModelImporterAnimationType) EditorGUILayout.EnumPopup("Animation Type", settings.animationType);
 
             GUILayout.Label("Animations", EditorStyles.boldLabel);
             settings.importAnimation = EditorGUILayout.Toggle("Import Animations", settings.importAnimation);
