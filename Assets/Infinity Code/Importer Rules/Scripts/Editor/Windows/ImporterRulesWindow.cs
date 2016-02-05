@@ -25,6 +25,7 @@ public class ImporterRulesWindow : EditorWindow
     private static ImporterRulesWindow wnd;
 
     private Vector2 scrollPosition;
+    public static bool onlyLogRules = false;
 
     public static int countRules
     {

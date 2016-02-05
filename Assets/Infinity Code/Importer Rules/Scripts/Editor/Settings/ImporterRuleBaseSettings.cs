@@ -115,8 +115,7 @@ namespace InfinityCode.ImporterRules
                 Type type = value.GetType();
                 if (type == typeof (Boolean)) element.CreateChild(info.Name, (Boolean) value);
                 else if (type.IsEnum) element.CreateChild(info.Name, value.ToString());
-                else if (type == typeof (string) || type == typeof (int) || type == typeof (float) ||
-                         type == typeof (uint)) element.CreateChild(info.Name, value.ToString());
+                else if (type == typeof (string) || type == typeof (int) || type == typeof (float) || type == typeof (uint)) element.CreateChild(info.Name, value.ToString());
                 else if (type == typeof (Vector2)) element.CreateChild(info.Name, (Vector2) value);
                 else if (type == typeof (Vector3)) element.CreateChild(info.Name, (Vector3) value);
                 else if (type == typeof (Vector4)) element.CreateChild(info.Name, (Vector4) value);

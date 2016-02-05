@@ -72,8 +72,9 @@ namespace InfinityCode.ImporterRules
 
         public void Apply(AssetImporter assetImporter, string assetPath)
         {
-            if (ImporterRulesWindow.logUserRules) Debug.Log("Apply rule [" + name + "]: " + assetPath.Substring(7));
-            activeSettings.SetSettingsToImporter(assetImporter, assetPath);
+            string type = ImporterRulesWindow.onlyLogRules ? "Log" : "Apply";
+            if (ImporterRulesWindow.logUserRules || ImporterRulesWindow.onlyLogRules) Debug.Log(type + " rule [" + name + "]: " + assetPath.Substring(7));
+            if (!ImporterRulesWindow.onlyLogRules) activeSettings.SetSettingsToImporter(assetImporter, assetPath);
         }
 
         private void ApplyToExists()
@@ -105,8 +106,7 @@ namespace InfinityCode.ImporterRules
 
                 AssetImporter assetImporter = obj as AssetImporter;
                 if (type == ImporterRulesTypes.audio && assetImporter is MovieImporter) continue;
-                if (type == ImporterRulesTypes.movie || type == ImporterRulesTypes.trueTypeFont)
-                    ImporterRulesPreprocess.AddWaitPath(assetPath);
+                if (type == ImporterRulesTypes.movie || type == ImporterRulesTypes.trueTypeFont) ImporterRulesPreprocess.AddWaitPath(assetPath);
 
                 Apply(assetImporter, assetPath);
                 AssetDatabase.ImportAsset(assetPath, ImportAssetOptions.ForceUpdate);
@@ -269,10 +269,12 @@ namespace InfinityCode.ImporterRules
             }
             if (GUILayout.Button(new GUIContent("►", "Apply the rule to the existing assets"), EditorStyles.toolbarButton, GUILayout.ExpandWidth(false)))
             {
+                ImporterRulesWindow.onlyLogRules = Event.current.shift;
                 if (EditorUtility.DisplayDialog("Apply the rule", "Apply the rule to the existing assets?", "Apply", "Cancel"))
                 {
                     ApplyToExists();
                 }
+                ImporterRulesWindow.onlyLogRules = false;
             }
             if (GUILayout.Button(new GUIContent("E", "Edit"), EditorStyles.toolbarButton, GUILayout.ExpandWidth(false)))
             {
