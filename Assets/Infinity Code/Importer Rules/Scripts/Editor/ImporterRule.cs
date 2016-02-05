@@ -123,36 +123,62 @@ namespace InfinityCode.ImporterRules
             ImporterRulesPathComparer comparer = pathComparer;
             if (comparer == ImporterRulesPathComparer.allAssets) return true;
             if (comparer != ImporterRulesPathComparer.regex && string.IsNullOrEmpty(path)) return true;
-            if (comparer == ImporterRulesPathComparer.regex && string.IsNullOrEmpty(pattern)) return true;
 
-            assetPath = assetPath.FixPath().Substring(7).ToLower();
+            string curPattern = pattern;
+            if (comparer == ImporterRulesPathComparer.regex && string.IsNullOrEmpty(curPattern)) return true;
 
-            if (comparer != ImporterRulesPathComparer.regex && path.Length > assetPath.Length)
+            assetPath = FixPath(assetPath).Substring(7);
+
+            if (comparer != ImporterRulesPathComparer.regex)
             {
-                if (comparer == ImporterRulesPathComparer.notContains) return true;
-                return false;
+                if (path.Contains("*") || path.Contains("?"))
+                {
+                    comparer = ImporterRulesPathComparer.regex;
+                    curPattern = PathToRegexp(path);
+                    if (comparer == ImporterRulesPathComparer.startWith) curPattern = "^" + curPattern;
+                }
+                else if (path.Length > assetPath.Length)
+                {
+                    if (comparer == ImporterRulesPathComparer.notContains) return true;
+                    return false;
+                }
             }
 
-            string curPath = path.FixPath().ToLower();
-            if (comparer == ImporterRulesPathComparer.startWith)
+            if (comparer == ImporterRulesPathComparer.regex)
             {
-                string str = assetPath.Substring(0, path.Length);
-                if (str == curPath) return true;
+                Regex regex = new Regex(curPattern);
+                bool isMatch = regex.IsMatch(assetPath);
+                if (pathComparer == ImporterRulesPathComparer.notContains) return !isMatch;
+                return isMatch;
             }
-            else if (comparer == ImporterRulesPathComparer.contains)
-            {
-                if (assetPath.Contains(curPath)) return true;
-            }
-            else if (comparer == ImporterRulesPathComparer.notContains)
-            {
-                if (!assetPath.Contains(curPath)) return true;
-            }
-            else if (comparer == ImporterRulesPathComparer.regex)
-            {
-                Regex regex = new Regex(pattern);
-                if (regex.IsMatch(assetPath)) return true;
-            }
+
+            string curPath = FixPath(path);
+            if (comparer == ImporterRulesPathComparer.startWith) return assetPath.Substring(0, path.Length) == curPath;
+            if (comparer == ImporterRulesPathComparer.contains) return assetPath.Contains(curPath);
+            if (comparer == ImporterRulesPathComparer.notContains) return !assetPath.Contains(curPath);
+
             return false;
+        }
+
+        private static string PathToRegexp(string path)
+        {
+            string[] chars = Regex.Split(FixPath(path), string.Empty);
+            string[] escapedChars =
+            {
+                ".", "+", "^", "$",
+                "(", ")", "{", "}", "[", "]"
+            };
+            for (int i = 0; i < chars.Length; i++)
+            {
+                string c = chars[i];
+
+                if (c == "*") c = ".*";
+                else if (c == "?") c = ".{1}";
+                else if (escapedChars.Contains(c)) c = @"\" + c;
+
+                chars[i] = c;
+            }
+            return String.Join("", chars);
         }
 
         public void CopyFrom(ImporterRule rule)
@@ -276,6 +302,11 @@ namespace InfinityCode.ImporterRules
             }
 
             EditorGUILayout.EndVertical();
+        }
+
+        private static string FixPath(string path)
+        {
+            return path.Replace("\\", "/").ToLower();
         }
 
         private void InitSettings()
