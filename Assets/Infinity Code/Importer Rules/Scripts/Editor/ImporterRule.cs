@@ -206,29 +206,12 @@ namespace InfinityCode.ImporterRules
 
             pathComparer = (ImporterRulesPathComparer)EditorGUILayout.EnumPopup("Path comparer: ", pathComparer);
 
-            if (pathComparer == ImporterRulesPathComparer.contains ||
-                pathComparer == ImporterRulesPathComparer.startWith)
+            if (pathComparer == ImporterRulesPathComparer.contains || pathComparer == ImporterRulesPathComparer.startWith || pathComparer == ImporterRulesPathComparer.notContains)
             {
                 GUILayout.BeginHorizontal();
                 path = EditorGUILayout.TextField("Path: ", path);
-                GUI.SetNextControlName("PathBrowseButton");
-                if (GUILayout.Button(new GUIContent("...", "Browse"), GUILayout.ExpandWidth(false)))
-                {
-                    string folderPath = EditorUtility.OpenFolderPanel("Path", Application.dataPath, "");
-                    if (!string.IsNullOrEmpty(folderPath))
-                    {
-                        if (!folderPath.Contains(Application.dataPath))
-                        {
-                            EditorUtility.DisplayDialog("Error", "The folder must be inside the folder Assets", "OK");
-                        }
-                        else if (folderPath != Application.dataPath)
-                        {
-                            path = folderPath.Substring(Application.dataPath.Length + 1) + "/";
-                        }
-                        else path = "";
-                        GUI.FocusControl("PathBrowseButton");
-                    }
-                }
+                DrawPathBrowse();
+                
                 GUILayout.EndHorizontal();
             }
             else if (pathComparer == ImporterRulesPathComparer.regex) pattern = EditorGUILayout.TextField("Pattern: ", pattern);
@@ -240,6 +223,23 @@ namespace InfinityCode.ImporterRules
             activeSettings.DrawEditor();
 
             if (useScroll) EditorGUILayout.EndScrollView();
+        }
+
+        private void DrawPathBrowse()
+        {
+            if (pathComparer == ImporterRulesPathComparer.notContains) return;
+
+            GUI.SetNextControlName("PathBrowseButton");
+            if (!GUILayout.Button(new GUIContent("...", "Browse"), GUILayout.ExpandWidth(false))) return;
+
+            string folderPath = EditorUtility.OpenFolderPanel("Path", Application.dataPath, "");
+            if (string.IsNullOrEmpty(folderPath)) return;
+
+            if (!folderPath.Contains(Application.dataPath)) EditorUtility.DisplayDialog("Error", "The folder must be inside the folder Assets", "OK");
+            else if (folderPath != Application.dataPath) path = folderPath.Substring(Application.dataPath.Length + 1) + "/";
+            else path = "";
+
+            GUI.FocusControl("PathBrowseButton");
         }
 
         public void DrawPreview(int index)
