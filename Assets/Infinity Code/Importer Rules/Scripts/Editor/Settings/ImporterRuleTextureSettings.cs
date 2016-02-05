@@ -1,6 +1,14 @@
 /*     INFINITY CODE 2013-2016      */
 /*   http://www.infinity-code.com   */
 
+#if UNITY_4_5 || UNITY_4_6
+#define USE_REFLECTION
+#endif
+
+#if !UNITY_4_5 && !UNITY_4_6 && !UNITY_4_7 && !UNITY_5_0 && !UNITY_5_1 && !UNITY_5_2
+#define USE_CRUNCHED
+#endif
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -38,9 +46,9 @@ namespace InfinityCode.ImporterRules
             TextContent("GUI (Editor \\ Legacy)"), 
             TextContent("Sprite (2d \\ uGUI)"),
             TextContent("Cursor"), 
-#if UNITY_4_5 || UNITY_4_6
+#if USE_REFLECTION
             TextContent("Reflection"),
-#else 
+#else
             TextContent("Cubemap"),
 #endif
             TextContent("Cookie"), 
@@ -52,7 +60,7 @@ namespace InfinityCode.ImporterRules
         private static readonly GUIContent textureTypeLabel = new GUIContent("Texture Type");
         private static readonly string[] bumpFilteringOptions = {"Sharp", "Smooth"};
 
-#if UNITY_4_5 || UNITY_4_6
+#if USE_REFLECTION
         private static readonly string[] refMapOptions =
         {
             "Sphere mapped", "Cylindrical", "Simple Sphere", "Nice Sphere", "6 Frames Layout"
@@ -107,12 +115,49 @@ namespace InfinityCode.ImporterRules
             (int) TextureImporterFormat.RGB24,
             (int) TextureImporterFormat.Alpha8,
             (int) TextureImporterFormat.ARGB32,
-            (int) TextureImporterFormat.RGBA32
+            (int) TextureImporterFormat.RGBA32,
+
+#if USE_CRUNCHED
+            (int) TextureImporterFormat.AutomaticCrunched,
+            (int) TextureImporterFormat.DXT1Crunched,
+            (int) TextureImporterFormat.DXT5Crunched,
+#endif
+        };
+
+        private static readonly TextureImporterFormat[] kFormatsWithCompressionSettings = 
+        {
+            TextureImporterFormat.PVRTC_RGB2,
+            TextureImporterFormat.PVRTC_RGB4,
+            TextureImporterFormat.PVRTC_RGBA2,
+            TextureImporterFormat.PVRTC_RGBA4,
+            TextureImporterFormat.ATC_RGB4,
+            TextureImporterFormat.ATC_RGBA8,
+            TextureImporterFormat.ETC_RGB4,
+            TextureImporterFormat.ETC2_RGB4,
+            TextureImporterFormat.ETC2_RGB4_PUNCHTHROUGH_ALPHA,
+            TextureImporterFormat.ETC2_RGBA8,
+            TextureImporterFormat.ASTC_RGB_4x4,
+            TextureImporterFormat.ASTC_RGB_5x5,
+            TextureImporterFormat.ASTC_RGB_6x6,
+            TextureImporterFormat.ASTC_RGB_8x8,
+            TextureImporterFormat.ASTC_RGB_10x10,
+            TextureImporterFormat.ASTC_RGB_12x12,
+            TextureImporterFormat.ASTC_RGBA_4x4,
+            TextureImporterFormat.ASTC_RGBA_5x5,
+            TextureImporterFormat.ASTC_RGBA_6x6,
+            TextureImporterFormat.ASTC_RGBA_8x8,
+            TextureImporterFormat.ASTC_RGBA_10x10,
+            TextureImporterFormat.ASTC_RGBA_12x12,
+#if USE_CRUNCHED
+            TextureImporterFormat.AutomaticCrunched,
+            TextureImporterFormat.DXT1Crunched,
+            TextureImporterFormat.DXT5Crunched,
+#endif
         };
 
         private bool useOriginalSize = false;
 
-#if UNITY_4_5 || UNITY_4_6
+#if USE_REFLECTION
         public const TextureImporterType reflectionType = TextureImporterType.Reflection;
 #else
         public const TextureImporterType reflectionType = TextureImporterType.Cubemap;
@@ -126,8 +171,7 @@ namespace InfinityCode.ImporterRules
         private static string[] BuildTextureStrings(int[] textureFormatValues)
         {
             string[] strArray = new string[textureFormatValues.Length];
-            for (int i = 0; i < textureFormatValues.Length; i++)
-                strArray[i] = GetTextureFormatString((TextureImporterFormat) textureFormatValues[i]);
+            for (int i = 0; i < textureFormatValues.Length; i++) strArray[i] = GetTextureFormatString((TextureImporterFormat) textureFormatValues[i]);
             return strArray;
         }
 
@@ -193,8 +237,7 @@ namespace InfinityCode.ImporterRules
 
             EditorGUILayout.Space();
 
-            settings.maxTextureSize = EditorGUILayout.IntPopup("Max Size", settings.maxTextureSize,
-                kMaxTextureSizeStrings, kMaxTextureSizeValues);
+            settings.maxTextureSize = EditorGUILayout.IntPopup("Max Size", settings.maxTextureSize, kMaxTextureSizeStrings, kMaxTextureSizeValues);
 
             useOriginalSize = EditorGUILayout.Toggle("Use Original image size", useOriginalSize);
 
@@ -207,12 +250,8 @@ namespace InfinityCode.ImporterRules
             }
             else if (textureType == TextureImporterType.Advanced)
             {
-                if (!texFormatValues.Contains((int) settings.textureFormat))
-                    settings.textureFormat = TextureImporterFormat.AutomaticCompressed;
-                settings.textureFormat =
-                    (TextureImporterFormat)
-                        EditorGUILayout.IntPopup("Format", (int) settings.textureFormat,
-                            BuildTextureStrings(texFormatValues), texFormatValues);
+                if (!texFormatValues.Contains((int) settings.textureFormat)) settings.textureFormat = TextureImporterFormat.AutomaticCompressed;
+                settings.textureFormat = (TextureImporterFormat) EditorGUILayout.IntPopup("Format", (int) settings.textureFormat, BuildTextureStrings(texFormatValues), texFormatValues);
             }
             else
             {
@@ -220,21 +259,27 @@ namespace InfinityCode.ImporterRules
                 {
                     (int) TextureImporterFormat.AutomaticCompressed,
                     (int) TextureImporterFormat.Automatic16bit,
-                    (int) TextureImporterFormat.AutomaticTruecolor
+                    (int) TextureImporterFormat.AutomaticTruecolor,
+#if USE_CRUNCHED
+                    (int) TextureImporterFormat.AutomaticCrunched,
+#endif
                 };
 
                 string[] testureFormatStrings =
                 {
-                    "Compressed", "16 bits", "Truecolor"
+                    "Compressed",
+                    "16 bits",
+                    "Truecolor",
+#if USE_CRUNCHED
+                    "Crunched",
+#endif
                 };
 
-                if (!textureFormats.Contains((int) settings.textureFormat))
-                    settings.textureFormat = TextureImporterFormat.AutomaticCompressed;
-                settings.textureFormat =
-                    (TextureImporterFormat)
-                        EditorGUILayout.IntPopup("Format", (int) settings.textureFormat, testureFormatStrings,
-                            textureFormats);
+                if (!textureFormats.Contains((int) settings.textureFormat)) settings.textureFormat = TextureImporterFormat.AutomaticCompressed;
+                settings.textureFormat = (TextureImporterFormat) EditorGUILayout.IntPopup("Format", (int) settings.textureFormat, testureFormatStrings, textureFormats);
             }
+
+            if (ArrayUtility.Contains(kFormatsWithCompressionSettings, settings.textureFormat)) settings.compressionQuality = EditorGUILayout.IntSlider("Compression Quality", settings.compressionQuality, 0, 100);
         }
 
         public override void GetSettingsFromImporter(AssetImporter importer)
@@ -266,8 +311,7 @@ namespace InfinityCode.ImporterRules
             if (tf == TextureImporterFormat.DXT1) return "RGB Compressed DXT1";
             if (tf == TextureImporterFormat.DXT5) return "RGBA Compressed DXT5";
             if (tf == TextureImporterFormat.ETC2_RGB4) return "RGB Compressed ETC2 4 bits";
-            if (tf == TextureImporterFormat.ETC2_RGB4_PUNCHTHROUGH_ALPHA)
-                return "RGB + 1 bit alpha Compressed ETC2 4 bits";
+            if (tf == TextureImporterFormat.ETC2_RGB4_PUNCHTHROUGH_ALPHA) return "RGB + 1 bit alpha Compressed ETC2 4 bits";
             if (tf == TextureImporterFormat.ETC2_RGBA8) return "RGBA Compressed ETC2 8 bits";
             if (tf == TextureImporterFormat.ETC_RGB4) return "RGB Compressed ETC 4 bits";
             if (tf == TextureImporterFormat.PVRTC_RGB2) return "RGB Compressed PVRTC 2 bits";
@@ -282,6 +326,12 @@ namespace InfinityCode.ImporterRules
             if (tf == TextureImporterFormat.Automatic16bit) return "Automatic 16 bits";
             if (tf == TextureImporterFormat.AutomaticCompressed) return "Automatic Compressed";
             if (tf == TextureImporterFormat.AutomaticTruecolor) return "Automatic Truecolor";
+
+#if USE_CRUNCHED
+            if (tf == TextureImporterFormat.AutomaticCrunched) return "Automatic Crunched";
+            if (tf == TextureImporterFormat.DXT1Crunched) return "RGB Crunched DXT1";
+            if (tf == TextureImporterFormat.DXT5Crunched) return "RGBA Crunched DXT5";
+#endif
 
             return "Unknown";
         }
@@ -307,15 +357,10 @@ namespace InfinityCode.ImporterRules
             settings.mipmapEnabled = textureType == TextureImporterType.Image || textureType == TextureImporterType.Advanced || textureType == reflectionType;
 
             settings.linearTexture = textureType == TextureImporterType.Bump || textureType == TextureImporterType.GUI;
-            settings.npotScale = (textureType == TextureImporterType.GUI || textureType == TextureImporterType.Sprite)
-                ? TextureImporterNPOTScale.None
-                : TextureImporterNPOTScale.ToNearest;
+            settings.npotScale = (textureType == TextureImporterType.GUI || textureType == TextureImporterType.Sprite) ? TextureImporterNPOTScale.None: TextureImporterNPOTScale.ToNearest;
             settings.spriteMode = (textureType == TextureImporterType.Sprite) ? 1 : 0;
             settings.readable = textureType == TextureImporterType.Cursor;
-
-            settings.generateCubemap = (textureType == reflectionType)
-                ? TextureImporterGenerateCubemap.FullCubemap
-                : TextureImporterGenerateCubemap.None;
+            settings.generateCubemap = (textureType == reflectionType)? TextureImporterGenerateCubemap.FullCubemap: TextureImporterGenerateCubemap.None;
 
             settings.ApplyTextureType(textureType, true);
         }
@@ -334,12 +379,10 @@ namespace InfinityCode.ImporterRules
 
         private void OnAdvancedGUI()
         {
-            settings.npotScale =
-                (TextureImporterNPOTScale) EditorGUILayout.EnumPopup("Non Power of 2", settings.npotScale);
+            settings.npotScale = (TextureImporterNPOTScale) EditorGUILayout.EnumPopup("Non Power of 2", settings.npotScale);
 
-#if UNITY_4_5 || UNITY_4_6
-            settings.generateCubemap =
-                (TextureImporterGenerateCubemap) EditorGUILayout.EnumPopup("Generate Cubemap", settings.generateCubemap);
+#if USE_REFLECTION
+            settings.generateCubemap = (TextureImporterGenerateCubemap) EditorGUILayout.EnumPopup("Generate Cubemap", settings.generateCubemap);
 #else
             string[] generateCubemapDisplayedOptions =
             {
@@ -415,15 +458,9 @@ namespace InfinityCode.ImporterRules
             if (settings.mipmapEnabled)
             {
                 EditorGUI.indentLevel++;
-                settings.generateMipsInLinearSpace = EditorGUILayout.Toggle("In Linear Space",
-                    settings.generateMipsInLinearSpace);
+                settings.generateMipsInLinearSpace = EditorGUILayout.Toggle("In Linear Space", settings.generateMipsInLinearSpace);
                 settings.borderMipmap = EditorGUILayout.Toggle("Border Mip Maps", settings.borderMipmap);
-                settings.mipmapFilter =
-                    (TextureImporterMipFilter)
-                        EditorGUILayout.IntPopup("Mip Map Filtering", (int) settings.mipmapFilter,
-                            new[] {"Box", "Kaiser"},
-                            new[]
-                            {(int) TextureImporterMipFilter.BoxFilter, (int) TextureImporterMipFilter.KaiserFilter});
+                settings.mipmapFilter = (TextureImporterMipFilter) EditorGUILayout.IntPopup("Mip Map Filtering", (int) settings.mipmapFilter, new[] {"Box", "Kaiser"}, new[] {(int) TextureImporterMipFilter.BoxFilter, (int) TextureImporterMipFilter.KaiserFilter});
                 settings.fadeOut = EditorGUILayout.Toggle("Fadeout Mip Maps", settings.fadeOut);
 
                 if (settings.fadeOut)
@@ -447,9 +484,7 @@ namespace InfinityCode.ImporterRules
             if (settings.convertToNormalMap)
             {
                 settings.heightmapScale = EditorGUILayout.Slider("Bumpiness", settings.heightmapScale, 0, 0.3f);
-                settings.normalMapFilter =
-                    (TextureImporterNormalFilter)
-                        EditorGUILayout.Popup("Filtering", (int) settings.normalMapFilter, bumpFilteringOptions);
+                settings.normalMapFilter = (TextureImporterNormalFilter)EditorGUILayout.Popup("Filtering", (int) settings.normalMapFilter, bumpFilteringOptions);
             }
         }
 
@@ -471,17 +506,13 @@ namespace InfinityCode.ImporterRules
         private void OnImageGUI()
         {
             settings.grayscaleToAlpha = EditorGUILayout.Toggle("Alpha from Grayscale", settings.grayscaleToAlpha);
-            if (settings.grayscaleToAlpha)
-                settings.alphaIsTransparency = EditorGUILayout.Toggle("Alpha is Transparency",
-                    settings.alphaIsTransparency);
+            if (settings.grayscaleToAlpha) settings.alphaIsTransparency = EditorGUILayout.Toggle("Alpha is Transparency", settings.alphaIsTransparency);
         }
 
         private void OnReflectionGUI()
         {
-#if UNITY_4_5 || UNITY_4_6
-            settings.generateCubemap =
-                (TextureImporterGenerateCubemap)
-                    (EditorGUILayout.Popup("Mapping", (int) settings.generateCubemap - 1, refMapOptions) + 1);
+#if USE_REFLECTION
+            settings.generateCubemap = (TextureImporterGenerateCubemap) (EditorGUILayout.Popup("Mapping", (int) settings.generateCubemap - 1, refMapOptions) + 1);
 #else
             string[] displayedOptions =
             {
@@ -533,17 +564,12 @@ namespace InfinityCode.ImporterRules
 
                 if (textureType == TextureImporterType.Advanced)
                 {
-                    settings.spriteMeshType =
-                        (SpriteMeshType)EditorGUILayout.EnumPopup("Mesh Type", settings.spriteMeshType);
-                    settings.spriteExtrude =
-                        (uint)EditorGUILayout.IntSlider("Extrude Edges", (int)settings.spriteExtrude, 0, 32);
+                    settings.spriteMeshType = (SpriteMeshType)EditorGUILayout.EnumPopup("Mesh Type", settings.spriteMeshType);
+                    settings.spriteExtrude = (uint)EditorGUILayout.IntSlider("Extrude Edges", (int)settings.spriteExtrude, 0, 32);
                 }
 
-                if (settings.spriteMode == 1)
-                    settings.spriteAlignment = EditorGUILayout.Popup("Pivot", settings.spriteAlignment,
-                        spriteAlignmentOptions);
-                if (settings.spriteAlignment == 9)
-                    settings.spritePivot = EditorGUILayout.Vector2Field("", settings.spritePivot);
+                if (settings.spriteMode == 1) settings.spriteAlignment = EditorGUILayout.Popup("Pivot", settings.spriteAlignment, spriteAlignmentOptions);
+                if (settings.spriteAlignment == 9) settings.spritePivot = EditorGUILayout.Vector2Field("", settings.spritePivot);
                 EditorGUI.indentLevel--;
             }
         }
