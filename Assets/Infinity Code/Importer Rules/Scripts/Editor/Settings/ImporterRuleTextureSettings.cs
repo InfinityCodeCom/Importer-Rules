@@ -2,11 +2,15 @@
 /*   http://www.infinity-code.com   */
 
 #if UNITY_4_5 || UNITY_4_6
-#define USE_REFLECTION
+#define UNITY_4_6L
+#endif
+
+#if !UNITY_4_6L && !UNITY_4_7
+#define UNITY_5P
 #endif
 
 #if !UNITY_4_5 && !UNITY_4_6 && !UNITY_4_7 && !UNITY_5_0 && !UNITY_5_1 && !UNITY_5_2
-#define USE_CRUNCHED
+#define UNITY_5_3P
 #endif
 
 using System;
@@ -46,7 +50,7 @@ namespace InfinityCode.ImporterRules
             TextContent("GUI (Editor \\ Legacy)"), 
             TextContent("Sprite (2d \\ uGUI)"),
             TextContent("Cursor"), 
-#if USE_REFLECTION
+#if UNITY_4_6L
             TextContent("Reflection"),
 #else
             TextContent("Cubemap"),
@@ -60,7 +64,7 @@ namespace InfinityCode.ImporterRules
         private static readonly GUIContent textureTypeLabel = new GUIContent("Texture Type");
         private static readonly string[] bumpFilteringOptions = {"Sharp", "Smooth"};
 
-#if USE_REFLECTION
+#if UNITY_4_6L
         private static readonly string[] refMapOptions =
         {
             "Sphere mapped", "Cylindrical", "Simple Sphere", "Nice Sphere", "6 Frames Layout"
@@ -117,7 +121,7 @@ namespace InfinityCode.ImporterRules
             (int) TextureImporterFormat.ARGB32,
             (int) TextureImporterFormat.RGBA32,
 
-#if USE_CRUNCHED
+#if UNITY_5_3P
             (int) TextureImporterFormat.AutomaticCrunched,
             (int) TextureImporterFormat.DXT1Crunched,
             (int) TextureImporterFormat.DXT5Crunched,
@@ -148,7 +152,7 @@ namespace InfinityCode.ImporterRules
             TextureImporterFormat.ASTC_RGBA_8x8,
             TextureImporterFormat.ASTC_RGBA_10x10,
             TextureImporterFormat.ASTC_RGBA_12x12,
-#if USE_CRUNCHED
+#if UNITY_5_3P
             TextureImporterFormat.AutomaticCrunched,
             TextureImporterFormat.DXT1Crunched,
             TextureImporterFormat.DXT5Crunched,
@@ -157,7 +161,7 @@ namespace InfinityCode.ImporterRules
 
         private bool useOriginalSize = false;
 
-#if USE_REFLECTION
+#if UNITY_4_6L
         public const TextureImporterType reflectionType = TextureImporterType.Reflection;
 #else
         public const TextureImporterType reflectionType = TextureImporterType.Cubemap;
@@ -260,7 +264,7 @@ namespace InfinityCode.ImporterRules
                     (int) TextureImporterFormat.AutomaticCompressed,
                     (int) TextureImporterFormat.Automatic16bit,
                     (int) TextureImporterFormat.AutomaticTruecolor,
-#if USE_CRUNCHED
+#if UNITY_5_3P
                     (int) TextureImporterFormat.AutomaticCrunched,
 #endif
                 };
@@ -270,7 +274,7 @@ namespace InfinityCode.ImporterRules
                     "Compressed",
                     "16 bits",
                     "Truecolor",
-#if USE_CRUNCHED
+#if UNITY_5_3P
                     "Crunched",
 #endif
                 };
@@ -327,7 +331,7 @@ namespace InfinityCode.ImporterRules
             if (tf == TextureImporterFormat.AutomaticCompressed) return "Automatic Compressed";
             if (tf == TextureImporterFormat.AutomaticTruecolor) return "Automatic Truecolor";
 
-#if USE_CRUNCHED
+#if UNITY_5_3P
             if (tf == TextureImporterFormat.AutomaticCrunched) return "Automatic Crunched";
             if (tf == TextureImporterFormat.DXT1Crunched) return "RGB Crunched DXT1";
             if (tf == TextureImporterFormat.DXT5Crunched) return "RGBA Crunched DXT5";
@@ -381,7 +385,7 @@ namespace InfinityCode.ImporterRules
         {
             settings.npotScale = (TextureImporterNPOTScale) EditorGUILayout.EnumPopup("Non Power of 2", settings.npotScale);
 
-#if USE_REFLECTION
+#if UNITY_4_6L
             settings.generateCubemap = (TextureImporterGenerateCubemap) EditorGUILayout.EnumPopup("Generate Cubemap", settings.generateCubemap);
 #else
             string[] generateCubemapDisplayedOptions =
@@ -405,7 +409,37 @@ namespace InfinityCode.ImporterRules
             settings.generateCubemap = (TextureImporterGenerateCubemap)generateCubemapValues[generateCubemap];
 
             EditorGUI.indentLevel++;
-            EditorGUI.BeginDisabledGroup(settings.generateCubemap != TextureImporterGenerateCubemap.None);
+            EditorGUI.BeginDisabledGroup(settings.generateCubemap == TextureImporterGenerateCubemap.None);
+
+#if UNITY_5P
+            string[] cubemapConvolutionOptions =
+            {
+                "None",
+                "Specular (Glossy Reflection)",
+                "Diffuse (Irradians)"
+            };
+
+            List<int> cubemapConvolutionValues = new List<int>
+            {
+                (int) TextureImporterCubemapConvolution.None,
+                (int) TextureImporterCubemapConvolution.Specular,
+                (int) TextureImporterCubemapConvolution.Diffuse,
+            };
+
+            int cubemapConvolution = cubemapConvolutionValues.IndexOf((int)settings.cubemapConvolution);
+
+            cubemapConvolution = EditorGUILayout.Popup("Convolution Type", cubemapConvolution, cubemapConvolutionOptions);
+            settings.cubemapConvolution = (TextureImporterCubemapConvolution) cubemapConvolutionValues[cubemapConvolution];
+
+            if (settings.cubemapConvolution == TextureImporterCubemapConvolution.Diffuse)
+            {
+                EditorGUI.indentLevel++;
+                settings.cubemapConvolutionSteps = EditorGUILayout.IntField("Steps", settings.cubemapConvolutionSteps);
+                settings.cubemapConvolutionExponent = EditorGUILayout.FloatField("Exponent", settings.cubemapConvolutionExponent);
+                EditorGUI.indentLevel--;
+            }
+#endif
+
             settings.seamlessCubemap = EditorGUILayout.Toggle("Fixup Edge Seams", settings.seamlessCubemap);
             EditorGUI.EndDisabledGroup();
             EditorGUI.indentLevel--;
@@ -449,6 +483,9 @@ namespace InfinityCode.ImporterRules
                 case AdvancedTextureType.Default:
                     OnImageGUI();
                     settings.linearTexture = EditorGUILayout.Toggle("Bypass sRGB Sampling", settings.linearTexture);
+#if UNITY_5P
+                    settings.rgbm = (TextureImporterRGBMMode) EditorGUILayout.EnumPopup("Encode as RGBM", settings.rgbm);
+#endif
                     OnSpriteGUI();
                     break;
             }
@@ -506,12 +543,19 @@ namespace InfinityCode.ImporterRules
         private void OnImageGUI()
         {
             settings.grayscaleToAlpha = EditorGUILayout.Toggle("Alpha from Grayscale", settings.grayscaleToAlpha);
-            if (settings.grayscaleToAlpha) settings.alphaIsTransparency = EditorGUILayout.Toggle("Alpha is Transparency", settings.alphaIsTransparency);
+#if !UNITY_5_3P
+            if (settings.grayscaleToAlpha) 
+            {
+#endif
+                settings.alphaIsTransparency = EditorGUILayout.Toggle("Alpha is Transparency", settings.alphaIsTransparency);
+#if !UNITY_5_3P
+        }
+#endif
         }
 
         private void OnReflectionGUI()
         {
-#if USE_REFLECTION
+#if UNITY_4_6L
             settings.generateCubemap = (TextureImporterGenerateCubemap) (EditorGUILayout.Popup("Mapping", (int) settings.generateCubemap - 1, refMapOptions) + 1);
 #else
             string[] displayedOptions =
@@ -539,17 +583,48 @@ namespace InfinityCode.ImporterRules
         {
             if (textureType == TextureImporterType.Advanced)
             {
-                int[] optionValues = { 0, 1, 2 };
-                string[] spriteModeOptions = {"None", "Single", "Multiple"};
+                int[] optionValues =
+                {
+                    (int)SpriteImportMode.None,
+                    (int)SpriteImportMode.Single,
+                    (int)SpriteImportMode.Multiple,
+#if UNITY_5_3P
+                    (int)SpriteImportMode.Polygon,
+#endif
+                };
+
+                string[] spriteModeOptions =
+                {
+                    "None",
+                    "Single",
+                    "Multiple",
+#if UNITY_5_3P
+                    "Polygon",
+#endif
+                };
                 settings.spriteMode = EditorGUILayout.IntPopup("Sprite Mode", settings.spriteMode, spriteModeOptions,
                     optionValues);
             }
             else
             {
-                int[] optionValues = { 1, 2 };
-                string[] spriteModeOptions = { "Single", "Multiple" };
-                settings.spriteMode = EditorGUILayout.IntPopup("Sprite Mode", settings.spriteMode, spriteModeOptions,
-                    optionValues);
+                int[] optionValues =
+                {
+                    (int)SpriteImportMode.Single,
+                    (int)SpriteImportMode.Multiple,
+#if UNITY_5_3P
+                    (int)SpriteImportMode.Polygon,
+#endif
+                };
+
+                string[] spriteModeOptions =
+                {
+                    "Single",
+                    "Multiple",
+#if UNITY_5_3P
+                    "Polygon",
+#endif
+                };
+                settings.spriteMode = EditorGUILayout.IntPopup("Sprite Mode", settings.spriteMode, spriteModeOptions, optionValues);
             }
 
             if (settings.spriteMode != 0)
@@ -568,7 +643,7 @@ namespace InfinityCode.ImporterRules
                     settings.spriteExtrude = (uint)EditorGUILayout.IntSlider("Extrude Edges", (int)settings.spriteExtrude, 0, 32);
                 }
 
-                if (settings.spriteMode == 1) settings.spriteAlignment = EditorGUILayout.Popup("Pivot", settings.spriteAlignment, spriteAlignmentOptions);
+                if (settings.spriteMode == (int)SpriteImportMode.Single) settings.spriteAlignment = EditorGUILayout.Popup("Pivot", settings.spriteAlignment, spriteAlignmentOptions);
                 if (settings.spriteAlignment == 9) settings.spritePivot = EditorGUILayout.Vector2Field("", settings.spritePivot);
                 EditorGUI.indentLevel--;
             }
